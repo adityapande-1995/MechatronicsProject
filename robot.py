@@ -7,6 +7,7 @@ import numpy as np
 from std_msgs.msg import Float64, Float64MultiArray
 from nav_msgs.msg import Odometry
 from copy import deepcopy
+from scipy import stats
 
 # Publishes /cmd_vel, /z_angle, /position ; Subscribes to /imu, /odom, /scan
 class Robot:
@@ -70,60 +71,70 @@ class Robot:
                     e = target - self.zangle
                     signal = e*K
                     self.send_msg(0,0,signal)
-                self.send_msg(0,0,0)
+                for i in range(5) : self.send_msg(0,0,0)
                 break
             if not self.imu_read_flag:
                 print("Waiting for IMU reading")
 
-
-    def align_with_wall(self, left=0):
+    def align_with_wall(self, wall="right"):
         while 1:
             if self.laserscan_read_flag: break
             else : print("Waiting for laserscan")
 
-        angle_step = 0.0175019223243
-        angles = np.arange(0,2*np.pi, angle_step)*180/np.pi
-        if not left : req_angle = angles[ np.argmin(self.laserscan) ]
-        else : req_angle = angles[ 70+ np.argmin(self.laserscan[70:110]) ]
-        print("Explore mode : Aligning with the wall")
-        self.rotate_by(req_angle - 90 )
-        # angles[90] = 90.75 deg ; angles[270] = 270.75 deg
-        print("Distances on left and right: ",self.laserscan[90], self.laserscan[270])
+        if wall == "right":
+            x = [ self.laserscan[i]*np.cos((i)*np.pi/180) for i in range(270-5, 270+6)]
+            y = [ self.laserscan[i]*np.sin((i)*np.pi/180) for i in range(270-5, 270+6)]
+            angle = np.arctan(stats.linregress(x,y)[0])*180/np.pi
+
+            print("Angle to align with right wall : ", angle)
+            self.rotate_by(angle)
+
+        if wall == "left":
+            x = [ self.laserscan[i]*np.cos((i)*np.pi/180) for i in range(90-5, 90+6)]
+            y = [ self.laserscan[i]*np.sin((i)*np.pi/180) for i in range(90-5, 90+6)]
+            angle = np.arctan(stats.linregress(x,y)[0])*180/np.pi
+
+            print("Angle to align with left wall : ", angle)
+            self.rotate_by(angle)
 
     def move_ahead(self):
         # Keep tracking left wall
         while True : 
             lf = self.laserscan[70] ; lm = self.laserscan[90] ; lb = self.laserscan[110]
             front_dist = min(self.laserscan[-2 :] + self.laserscan[ : 2])
-            wall_thresh_close = 0.23 ; wall_thresh_far = 0.27
-            ang_vel = 0.1 ; angle_thresh = 0.03; lin_vel = 0.15
-            print("lf-lb = ",lf-lb, " lm = ", lm, "front_dist = ", front_dist)
-            if front_dist < 0.35:
+            wall_thresh_close = 0.20 ; wall_thresh_far = 0.22 ; wall_lost_dist = 0.4
+            ang_vel = 0.3 ; angle_thresh = 0.025; lin_vel = 0.15
+            # print("lf-lb = ",lf-lb, " lm = ", lm, "front_dist = ", front_dist)
+            if lm > wall_lost_dist:
+                print("Lost left wall..")
+                return "lost left"
+            elif front_dist < 0.3:
                 print("Obstacle ahead, stop")
                 self.send_msg(0,0,0)
-                break
+                return "obstacle"
+
             # No obstacle ahead
             elif lf - lb > angle_thresh and lm < wall_thresh_close : 
-                print("Pointing right, too close to wall, go straight")
+                #print("Pointing right, too close to wall, go straight")
                 self.send_msg(lin_vel,0,0)
             elif lf - lb > angle_thresh and lm > wall_thresh_far :
-                print("Pointing right, too far away from wall, steering left !")
+                #print("Pointing right, too far away from wall, steering left !")
                 self.send_msg(lin_vel,0,ang_vel)
             elif lb - lf > angle_thresh and lm > wall_thresh_far: # Pointing towards left but too far
-                print("Pointing left, too far from wall, go straight")
+                #print("Pointing left, too far from wall, go straight")
                 self.send_msg(lin_vel,0,0)
             elif lb - lf > angle_thresh and lm < wall_thresh_close:
-                print("Pointing left, too close to wall, steer right !")
+                #print("Pointing left, too close to wall, steer right !")
                 self.send_msg(lin_vel,0,-ang_vel)
             elif lf - lb < angle_thresh and lf - lb > -angle_thresh :
                 if lm < wall_thresh_close:
-                    print("Straight but too close to wall, steer right")
+                    #print("Straight but too close to wall, steer right")
                     self.send_msg(lin_vel,0,-ang_vel)
                 elif lm > wall_thresh_far:
-                    print("Straight but too far from wall, steer left")
+                    #print("Straight but too far from wall, steer left")
                     self.send_msg(lin_vel,0,ang_vel)
                 else :
-                    print("Straight and midway, go straight")
+                    #print("Straight and midway, go straight")
                     self.send_msg(lin_vel,0,0)
             else :
                 print("Weird case, go straight")
@@ -131,33 +142,61 @@ class Robot:
 
     # Explore mode
     def explore(self):
-        self.align_with_wall()
+        # self.align_with_wall()
         while 1 :
-            self.move_ahead()
-            # Move ahead exited, obstacle ahead
-            side_clearance = self.laserscan[90] - self.laserscan[270]
-            back_clearance = self.laserscan[180]
-            print(side_clearance, back_clearance)
-            if side_clearance > 0.3 :
-                print("Rotating left") 
-                self.rotate_by(90)
-            elif side_clearance < -0.3: 
-                print("Rotating right")
-                self.rotate_by(-90) ;
-            elif back_clearance > 0.5 :
-                print("Turning around") 
-                self.rotate_by(180)
-            else:
-                print("Weird case found in explore, exiting")
-                break
+            reason = self.move_ahead()
+            print("\nfront, left, right : ", self.laserscan[0], self.laserscan[90], self.laserscan[270])
 
-            # print("Realigning wrt new wall")
-            # self.align_with_wall(1)
+            # At a T point
+            if self.laserscan[0] < 0.4 and max(self.laserscan[90-7:90+7]) > 0.4 and max(self.laserscan[270-7:270+7]) > 0.4 :
+                # Move a bit ahead
+                for i in range(5) : self.send_msg(0.15,0,0) ; time.sleep(0.2)
+                print("Rotating left as reached a T point")
+                self.rotate_by(90)
+                self.align_with_wall("right")
+                if self.laserscan[0] > 0.5 : # Finding next left wall given nothing is in front
+                    print("Finding left wall..");
+                    while self.laserscan[90] > 0.4  :
+                        self.send_msg(0.15,0,0)
+                    print("Found")
+
+            # Found an alley towards left
+            elif self.laserscan[0] > 0.4 and max(self.laserscan[90-5:90+5]) > 0.4 and min(self.laserscan[270-5:270+5]) < 0.4:
+                print("Found an alley towards left")
+                self.align_with_wall("right")
+                for i in range(6) : self.send_msg(0.15,0,0) ; time.sleep(0.2)
+                self.rotate_by(90)
+                if self.laserscan[0] > 0.5 : # Finding next left wall given nothing is in front
+                    print("Finding left wall..");
+                    while self.laserscan[90] > 0.4: 
+                        self.send_msg(0.15,0,0)
+                    print("Found")
+
+            # Stuck in 90deg corner, must turn left
+            elif self.laserscan[0] < 0.4 and max(self.laserscan[90-5:90+5]) > max(self.laserscan[270-5 : 270+5]) :
+                while min(self.laserscan[-3:]+self.laserscan[0:3]) > 0.27 : self.send_msg(0.1,0,0) ; time.sleep(0.15)
+                print("Turning left")
+                self.rotate_by(90)
+                self.align_with_wall("right")
+                if self.laserscan[0] > 0.5 : # Finding next left wall given nothing is in front
+                    print("Finding left wall..");
+                    while self.laserscan[90] > 0.4  :
+                        self.send_msg(0.15,0,0)
+                    print("Found")
+
+            # Stuck in 90deg corner, must turn right
+            elif self.laserscan[0] < 0.4 and max(self.laserscan[90-5:90+5]) < max(self.laserscan[270-5 : 270+5]):
+                print("Turning right")
+                self.rotate_by(-90)
+                self.align_with_wall("left")
+
+            else:
+                print("Weird case found in explore, turning around")
+                self.rotate_by(180)
 
 
 if __name__ == '__main__':
-    pblart = Robot() 
+    pblart = Robot()
+    pblart.rotate_by(-90)
     pblart.explore()
-    # pblart.rotate_by(-45)
-
 
