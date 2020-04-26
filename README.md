@@ -3,7 +3,7 @@
 ## Launching the simulation
 The ```TURTLEBOT3_MODEL``` environment variable need to be exported globally :
 ```bash
-cd FinalProject; export TURTLEBOT3_MODEL=burger
+cd MechatronicsProject; export TURTLEBOT3_MODEL=burger
 ```
 Then, in separate terminals, enter the following :
 
