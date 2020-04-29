@@ -9,7 +9,7 @@ Then, in separate terminals, enter the following :
 
 ### Launching the environment
 ```bash
-roslaunch ttb3_custom.launch
+roslaunch ttb3_custom.launch map:=$(pwd)/maps/maze4.xml
 ```
 ### Getting rviz to work :
 ```bash
@@ -24,5 +24,5 @@ rviz -d pblart.rviz
 
 ### Launching autonomous control :
 ```bash
-python robot.py
+python scripts/robot2.py
 ```

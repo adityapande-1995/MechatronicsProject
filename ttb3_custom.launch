@@ -3,9 +3,10 @@
   <arg name="x_pos" default="0.05"/>
   <arg name="y_pos" default="0.0"/>
   <arg name="z_pos" default="0.0"/>
+  <arg name="map" default=""/>
 
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
-    <arg name="world_name" value="/home/aditya/Desktop/Acads/MEchtronics/FinalProject/maze_final.xml"/>
+    <arg name="world_name" value="$(arg map)"/>
     <arg name="paused" value="false"/>
     <arg name="use_sim_time" value="true"/>
     <arg name="gui" value="true"/>

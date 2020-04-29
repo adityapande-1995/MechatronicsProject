@@ -100,41 +100,46 @@ class Robot:
     def move_ahead(self):
         # Keep tracking left wall
         while True : 
+            # ************* Tuning parameters *********
+            wall_thresh_close = 0.39 ; wall_thresh_far = 0.41 ; wall_lost_dist = 0.7
+            ang_vel = 0.3 ; angle_thresh = 0.025; lin_vel = 0.20
+            front_thresh = 0.5
+
+            # Left front, left back, left mid distances
             lf = self.laserscan[70] ; lm = self.laserscan[90] ; lb = self.laserscan[110]
             front_dist = min(self.laserscan[-2 :] + self.laserscan[ : 2])
-            wall_thresh_close = 0.20 ; wall_thresh_far = 0.22 ; wall_lost_dist = 0.4
-            ang_vel = 0.3 ; angle_thresh = 0.025; lin_vel = 0.15
-            # print("lf-lb = ",lf-lb, " lm = ", lm, "front_dist = ", front_dist)
+            print("lf-lb = ",lf-lb, " lm = ", lm, "front_dist = ", front_dist)
+
             if lm > wall_lost_dist:
                 print("Lost left wall..")
                 return "lost left"
-            elif front_dist < 0.3:
+            elif front_dist < front_thresh:
                 print("Obstacle ahead, stop")
                 self.send_msg(0,0,0)
                 return "obstacle"
 
             # No obstacle ahead
             elif lf - lb > angle_thresh and lm < wall_thresh_close : 
-                #print("Pointing right, too close to wall, go straight")
+                print("Pointing right, too close to wall, go straight")
                 self.send_msg(lin_vel,0,0)
             elif lf - lb > angle_thresh and lm > wall_thresh_far :
-                #print("Pointing right, too far away from wall, steering left !")
+                print("Pointing right, too far away from wall, steering left !")
                 self.send_msg(lin_vel,0,ang_vel)
             elif lb - lf > angle_thresh and lm > wall_thresh_far: # Pointing towards left but too far
-                #print("Pointing left, too far from wall, go straight")
+                print("Pointing left, too far from wall, go straight")
                 self.send_msg(lin_vel,0,0)
             elif lb - lf > angle_thresh and lm < wall_thresh_close:
-                #print("Pointing left, too close to wall, steer right !")
+                print("Pointing left, too close to wall, steer right !")
                 self.send_msg(lin_vel,0,-ang_vel)
             elif lf - lb < angle_thresh and lf - lb > -angle_thresh :
                 if lm < wall_thresh_close:
-                    #print("Straight but too close to wall, steer right")
+                    print("Straight but too close to wall, steer right")
                     self.send_msg(lin_vel,0,-ang_vel)
                 elif lm > wall_thresh_far:
-                    #print("Straight but too far from wall, steer left")
+                    print("Straight but too far from wall, steer left")
                     self.send_msg(lin_vel,0,ang_vel)
                 else :
-                    #print("Straight and midway, go straight")
+                    print("Straight and midway, go straight")
                     self.send_msg(lin_vel,0,0)
             else :
                 print("Weird case, go straight")
@@ -147,8 +152,13 @@ class Robot:
             reason = self.move_ahead()
             print("\nfront, left, right : ", self.laserscan[0], self.laserscan[90], self.laserscan[270])
 
+            # **** Tuning parameters ****
+            front_thresh2 = 0.5 ; side_thresh2 = 1.0
+
+            # Decision loop
+
             # At a T point
-            if self.laserscan[0] < 0.4 and max(self.laserscan[90-7:90+7]) > 0.4 and max(self.laserscan[270-7:270+7]) > 0.4 :
+            if self.laserscan[0] < front_thresh2 and max(self.laserscan[90-7:90+7]) > side_thresh2 and max(self.laserscan[270-7:270+7]) > side_thresh2 :
                 # Move a bit ahead
                 for i in range(5) : self.send_msg(0.15,0,0) ; time.sleep(0.2)
                 print("Rotating left as reached a T point")
@@ -161,7 +171,7 @@ class Robot:
                     print("Found")
 
             # Found an alley towards left
-            elif self.laserscan[0] > 0.4 and max(self.laserscan[90-5:90+5]) > 0.4 and min(self.laserscan[270-5:270+5]) < 0.4:
+            elif self.laserscan[0] > front_thresh2  and max(self.laserscan[90-5:90+5]) > side_thresh2  and min(self.laserscan[270-5:270+5]) < side_thresh2 :
                 print("Found an alley towards left")
                 self.align_with_wall("right")
                 for i in range(6) : self.send_msg(0.15,0,0) ; time.sleep(0.2)
@@ -173,7 +183,7 @@ class Robot:
                     print("Found")
 
             # Stuck in 90deg corner, must turn left
-            elif self.laserscan[0] < 0.4 and max(self.laserscan[90-5:90+5]) > max(self.laserscan[270-5 : 270+5]) :
+            elif self.laserscan[0] < front_thresh2 and max(self.laserscan[90-5:90+5]) > max(self.laserscan[270-5 : 270+5]) :
                 while min(self.laserscan[-3:]+self.laserscan[0:3]) > 0.27 : self.send_msg(0.1,0,0) ; time.sleep(0.15)
                 print("Turning left")
                 self.rotate_by(90)
@@ -185,7 +195,7 @@ class Robot:
                     print("Found")
 
             # Stuck in 90deg corner, must turn right
-            elif self.laserscan[0] < 0.4 and max(self.laserscan[90-5:90+5]) < max(self.laserscan[270-5 : 270+5]):
+            elif self.laserscan[0] < front_thresh2 and max(self.laserscan[90-5:90+5]) < max(self.laserscan[270-5 : 270+5]):
                 print("Turning right")
                 self.rotate_by(-90)
                 self.align_with_wall("left")
