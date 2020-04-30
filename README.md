@@ -26,3 +26,5 @@ rviz -d pblart.rviz
 ```bash
 python scripts/robot2.py
 ```
+### Target detection using camera
+
