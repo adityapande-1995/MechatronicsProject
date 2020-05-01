@@ -12,7 +12,6 @@ class TargetDetector:
         self.bridge = CvBridge()
         rospy.Subscriber("camera/rgb/image_raw", Image, self.callback_rgb)
         rospy.Subscriber("camera/depth/image_raw", Image, self.callback_depth)
-        self.pub = rospy.Publisher('masks', Image, queue_size=10)
         # Flags
         self.flag_rgb = False ; self.flag_depth = False;
 
@@ -74,4 +73,5 @@ class TargetDetector:
 if __name__ == '__main__':
     T = TargetDetector()
     T.find_target()
+
 
