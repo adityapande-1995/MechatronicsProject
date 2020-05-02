@@ -3,7 +3,7 @@ from __future__ import print_function
 import rospy, time, subprocess
 from geometry_msgs.msg import Twist
 import numpy as np
-from std_msgs.msg import Float64, Float64MultiArray, Bool
+from std_msgs.msg import Float64, Float64MultiArray, Bool, String
 from nav_msgs.msg import Odometry
 from copy import deepcopy
 
@@ -32,23 +32,20 @@ class Shooter:
 		target_string = targetdata.data
 		target_info = target_string.split('|',-1)
 		color = target_info[0]
-		if color == "blue":
-			return
-
 		xPos = float(target_info[1])
 		yPos = flat(target_info[2])
 		
 		if abs(xPos-0.5)<0.25 and abs(yPos-0.5)<0.25:
 			shoot()
 
-    def shoot(self):
-        if self.ammo > 0:
-            position = " -x "+ str(self.position[0]) +" -y "+ str(self.position[1]) +" -z " + str(self.position[2] + 2)
-            projectile_name = "projectile"+str(self.ammo)
-            bashCommand = "rosrun gazebo_ros spawn_model -sdf -file /home/henry/MechatronicsProject/projectile.sdf -model "+ projectile_name + position
-            self.ammo=self.ammo-1
-            process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
-            output, error = process.communicate()
+	def shoot(self):
+		if self.ammo > 0:
+			position = " -x "+ str(self.position[0]) +" -y "+ str(self.position[1]) +" -z " + str(self.position[2] + 2)
+			projectile_name = "projectile"+str(self.ammo)
+			bashCommand = "rosrun gazebo_ros spawn_model -sdf -file /home/henry/MechatronicsProject/projectile.sdf -model "+ projectile_name + position
+			self.ammo=self.ammo-1
+			process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
+			output, error = process.communicate()
 		
 	def go(self):
 		while True:
