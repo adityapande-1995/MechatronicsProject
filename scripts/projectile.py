@@ -21,7 +21,6 @@ class Shooter:
 		self.position = [0,0,0]
 		self.fired = False
 		rospy.Subscriber("odom",Odometry, self._update_position)
-		rospy.Subscriber("z_angle",Float64,self._update_imu)
 		rospy.Subscriber("target", String, self._update_target)
 		rospy.Subscriber("imu",Imu, self._update_imu)
 
@@ -50,18 +49,29 @@ class Shooter:
 			self.shoot()
 
 	def shoot(self):
+		print("shooting")
 		if self.ammo > 0:
-			print(self.position) ; position = " -x "+ str(self.position[0]) +" -y "+ str(self.position[1]) +" -z " + str(self.position[2] + 0.5)
+			position = " -x "+ str(self.position[0]) +" -y "+ str(self.position[1]) +" -z " + str(self.position[2] + 0.5)
 			projectile_path = os.getcwd() + "/maps/projectile.sdf"
 			projectile_name = "projectile"+str(13-self.ammo)
 			bashCommand = "rosrun gazebo_ros spawn_model -sdf -file " +projectile_path + " -model "+ projectile_name + position
+			self.runBash(bashCommand)
 			self.ammo=self.ammo-1
-			process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
-			output, error = process.communicate()
+			if self.ammo<11:
+				#delete previous projectile
+				bashCommand = "rosservice call gazebo gazebo/delete_model '{model_name: projectile"+str(13-self.ammo+2)+"}'"
+				self.runBash(bashCommand)
+				
+			
 		
 	def go(self):
 		while True:
 			continue
+
+	def runBash(self,bashCommand):
+		process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
+		output, error = process.communicate()
+	
 		
 
 if __name__ == '__main__':
