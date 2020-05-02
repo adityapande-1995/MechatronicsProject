@@ -19,7 +19,6 @@ class Shooter:
 		self.fired = False
 		rospy.Subscriber("position",Float64MultiArray,self._update_position)
 		rospy.Subscriber("z_angle",Float64,self._update_angle)
-		rospy.Subscriber("shoot",Bool,self._tryfire)
 		print("Initialized")
 	def _update_angle(self, ang):
 		print("updated angle")
