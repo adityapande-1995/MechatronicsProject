@@ -33,7 +33,7 @@ class Shooter:
 		target_info = target_string.split('|',-1)
 		color = target_info[0]
 		xPos = float(target_info[1])
-		yPos = flat(target_info[2])
+		yPos = float(target_info[2])
 		
 		if abs(xPos-0.5)<0.25 and abs(yPos-0.5)<0.25:
 			shoot()
