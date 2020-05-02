@@ -4,7 +4,7 @@ import rospy, time, subprocess
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import Imu, LaserScan
 import numpy as np
-from std_msgs.msg import Float64, Float64MultiArray, Bool
+from std_msgs.msg import Float64, Float64MultiArray
 from nav_msgs.msg import Odometry
 from copy import deepcopy
 
@@ -18,7 +18,7 @@ def piecewise_linear(x, x0, y0, k1, k2):
     return np.piecewise(x, [x < x0], [lambda x:k1*x + y0-k1*x0, lambda x:k2*x + y0-k2*x0])
 
 
-# Publishes /shoot, /cmd_vel, /z_angle, /position ; Subscribes to /imu, /odom, /scan
+# Publishes /cmd_vel, /z_angle, /position ; Subscribes to /imu, /odom, /scan
 class Robot:
     def __init__(self):
         # Class variables
@@ -30,8 +30,6 @@ class Robot:
         rospy.init_node('brain', anonymous=True)
         # Orientation publisher
         self.pub_orientation = rospy.Publisher('z_angle', Float64 ,queue_size=10)
-		# Shoot publisher
-        self.pub_shoot = rospy.Publisher('shoot', Bool, queue_size=10)
         # IMU subscriber
         rospy.Subscriber("imu",Imu, self._update_imu)
         # Odometry pose subscriber

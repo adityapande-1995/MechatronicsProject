@@ -5,11 +5,14 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 import cv2, time
 import numpy as np
+from std_msgs.msg import Bool
 
 class TargetDetector:
     def __init__(self):
         rospy.init_node('target_detector', anonymous=True)
         self.bridge = CvBridge()
+        # Shoot publisher
+        self.pub_shoot = rospy.Publisher('shoot', Bool, queue_size=10)
         rospy.Subscriber("camera/rgb/image_raw", Image, self.callback_rgb)
         rospy.Subscriber("camera/depth/image_raw", Image, self.callback_depth)
         # Flags
