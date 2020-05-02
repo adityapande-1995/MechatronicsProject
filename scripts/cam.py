@@ -65,6 +65,7 @@ class TargetDetector:
 
                 if i == 0 :
                     print("Found blue target")
+
                     self.pub_target.publish("blue" + msg)
                 elif i == 1 :
                     print("Found green target")
@@ -80,7 +81,7 @@ class TargetDetector:
             #masks = np.hstack((masks, red_mask))
             #masks = cv2.resize(masks, (0,0), fx=0.2, fy=0.2)
             #cv2.imshow("Masks", masks)
-            img = cv2.resize(img, (0,0), fx=0.5, fy=0.5)
+            img = cv2.resize(img, (0,0), fx=0.1, fy=0.1)
             cv2.imshow("Overlay", img)
             key = cv2.waitKey(1)
             if key == 27:
