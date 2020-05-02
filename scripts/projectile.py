@@ -51,9 +51,9 @@ class Shooter:
 
 	def shoot(self):
 		if self.ammo > 0:
-			print(self.position) ; position = " -x "+ str(self.position[0]) +" -y "+ str(self.position[1]) +" -z " + str(self.position[2] + 2)
+			print(self.position) ; position = " -x "+ str(self.position[0]) +" -y "+ str(self.position[1]) +" -z " + str(self.position[2] + 0.5)
 			projectile_path = os.getcwd() + "/maps/projectile.sdf"
-			projectile_name = "projectile"+str(11-self.ammo)
+			projectile_name = "projectile"+str(13-self.ammo)
 			bashCommand = "rosrun gazebo_ros spawn_model -sdf -file " +projectile_path + " -model "+ projectile_name + position
 			self.ammo=self.ammo-1
 			process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
