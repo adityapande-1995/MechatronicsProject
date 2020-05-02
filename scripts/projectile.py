@@ -21,9 +21,8 @@ class Shooter:
 		rospy.Subscriber("position",Float64MultiArray,self._update_position)
 		rospy.Subscriber("z_angle",Float64,self._update_angle)
         rospy.Subscriber("target", String, self._update_target)
-		print("Initialized")
+
 	def _update_angle(self, ang):
-		print("updated angle")
 		self.zangle = ang.data
 
 	def _update_position(self, pos):
