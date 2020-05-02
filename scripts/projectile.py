@@ -13,14 +13,14 @@ from sys import exit
 # Subscribes to /position, /z_angle, /shoot
 class Shooter:
 	def __init__(self):
-        rospy.init_node('shooter', anonymous=True)
+		rospy.init_node('shooter', anonymous=True)
 		self.ammo = 12
 		self.zangle = 0
 		self.position = []
 		self.fired = False
 		rospy.Subscriber("position",Float64MultiArray,self._update_position)
 		rospy.Subscriber("z_angle",Float64,self._update_angle)
-        rospy.Subscriber("target", String, self._update_target)
+		rospy.Subscriber("target", String, self._update_target)
 
 	def _update_angle(self, ang):
 		self.zangle = ang.data
