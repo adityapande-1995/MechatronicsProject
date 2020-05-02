@@ -22,10 +22,10 @@ class Shooter:
 		print("Initialized")
 	def _update_angle(self, ang):
 		print("updated angle")
-		self.zangle = ang
+		self.zangle = ang.data
 
 	def _update_position(self, pos):
-		self.position = pos
+		self.position = pos.data
 		
 	def _tryfire(self, fire):
 		if fire == True:
