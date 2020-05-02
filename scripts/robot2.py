@@ -17,7 +17,6 @@ from sys import exit
 def piecewise_linear(x, x0, y0, k1, k2):
     return np.piecewise(x, [x < x0], [lambda x:k1*x + y0-k1*x0, lambda x:k2*x + y0-k2*x0])
 
-
 # Publishes /cmd_vel, /z_angle, /position ; Subscribes to /imu, /odom, /scan
 class Robot:
     def __init__(self):
@@ -210,13 +209,11 @@ class Robot:
             self.send_msg(0,0,0)
             print("Found wall")
             self.align_with_wall()
-
         else :
             print("Weird case found")
             while self.laserscan[90] > 0.8 : self.send_msg(0.15,0,0)
 
         self.ax.legend()
-
 
     def go(self):
         while 1:

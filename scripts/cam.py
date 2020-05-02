@@ -5,18 +5,18 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 import cv2, time
 import numpy as np
-from std_msgs.msg import Bool
+from std_msgs.msg import String
 
 class TargetDetector:
     def __init__(self):
         rospy.init_node('target_detector', anonymous=True)
         self.bridge = CvBridge()
-        # Shoot publisher
-        self.pub_shoot = rospy.Publisher('shoot', Bool, queue_size=10)
         rospy.Subscriber("camera/rgb/image_raw", Image, self.callback_rgb)
         rospy.Subscriber("camera/depth/image_raw", Image, self.callback_depth)
         # Flags
         self.flag_rgb = False ; self.flag_depth = False;
+        # Target centroid publisher
+        self.pub_target = rospy.Publisher('target', String, queue_size=10)
 
     def callback_rgb(self,resp):
         self.raw_rgb = self.bridge.imgmsg_to_cv2(resp, desired_encoding="bgr8")
@@ -56,14 +56,27 @@ class TargetDetector:
 
             img = self.raw_rgb.copy()
             for i,cnt in findings:
-                if i == 0 : print("Found blue target")
-                elif i == 1 : print("Found green target")
-                elif i == 2 : print("Found red target")
                 print("Area : ", cv2.contourArea(cnt))
+                # Calculate centroid
+                M = cv2.moments(c)
+                cX = float(M["m10"] / M["m00"])/self.raw_rgb.shape[1]
+                cY = float(M["m01"] / M["m00"])/self.raw_rgb.shape[0]
+                msg = "|" + str(cX) + "|" + str(cY)
+
+                if i == 0 :
+                    print("Found blue target")
+                    self.pub_target.publish("blue" + msg)
+                elif i == 1 :
+                    print("Found green target")
+                    self.pub_target.publish("green" + msg)
+                elif i == 2 :
+                    print("Found red target")
+                    self.pub_target.publish("red" + msg)
+                
                 img = cv2.drawContours(img, [cnt], 0, (255,255,255), 3)
 
             # Show image
-            #masks = np.hstack((blue_mask, green_mask ))
+             #masks = np.hstack((blue_mask, green_mask ))
             #masks = np.hstack((masks, red_mask))
             #masks = cv2.resize(masks, (0,0), fx=0.2, fy=0.2)
             #cv2.imshow("Masks", masks)
