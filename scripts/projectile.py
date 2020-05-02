@@ -20,6 +20,7 @@ class Shooter:
 		self.fired = False
 		rospy.Subscriber("position",Float64MultiArray,self._update_position)
 		rospy.Subscriber("z_angle",Float64,self._update_angle)
+        rospy.Subscriber("target", String, self._update_target)
 		print("Initialized")
 	def _update_angle(self, ang):
 		print("updated angle")
@@ -27,10 +28,19 @@ class Shooter:
 
 	def _update_position(self, pos):
 		self.position = pos.data
+
+	def _update_target(self,targetdata):
+		target_string = targetdata.data
+		target_info = target_string.split('|',-1)
+		color = target_info[0]
+		if color == "blue":
+			return
+
+		xPos = float(target_info[1])
+		yPos = flat(target_info[2])
 		
-	def _tryfire(self, fire):
-		if fire == True:
-			self.shoot()
+		if abs(xPos-0.5)<0.25 and abs(yPos-0.5)<0.25:
+			shoot()
 
     def shoot(self):
         if self.ammo > 0:
