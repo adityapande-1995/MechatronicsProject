@@ -29,10 +29,8 @@ class Shooter:
 		self.position = pos
 		
 	def _tryfire(self, fire):
-		print("Trying to shoot")
-		if fire == True and ammo > 0:
-			ammo = ammo - 1
-			self._fire()
+		if fire == True:
+			self.shoot()
 
     def shoot(self):
         if self.ammo > 0:

@@ -23,7 +23,7 @@ class Robot:
     def __init__(self):
         # Class variables
         self.zangle = 0 ; self.imu_read_flag = False ; self.rotate_tolerance = 1.5
-        self.position = [] ; self.position_read_flag = False ; self.ammo = 12
+        self.position = [] ; self.position_read_flag = False ;
         self.laserscan = None ; self.laserscan_read_flag = False ;
         # Velocity publisher
         self.pub = rospy.Publisher('cmd_vel', Twist ,queue_size=10)
