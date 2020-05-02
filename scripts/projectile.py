@@ -59,7 +59,7 @@ class Shooter:
 			self.ammo=self.ammo-1
 			if self.ammo<11:
 				#delete previous projectile
-				bashCommand = "rosservice call gazebo gazebo/delete_model '{model_name: projectile"+str(13-self.ammo+2)+"}'"
+				bashCommand = "rosservice call gazebo/delete_model '{model_name: projectile"+str(13-self.ammo+2)+"}'"
 				self.runBash(bashCommand)
 				
 			
