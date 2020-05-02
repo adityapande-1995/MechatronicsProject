@@ -36,7 +36,7 @@ class Shooter:
 		yPos = float(target_info[2])
 		
 		if abs(xPos-0.5)<0.25 and abs(yPos-0.5)<0.25:
-			shoot()
+			self.shoot()
 
 	def shoot(self):
 		if self.ammo > 0:
