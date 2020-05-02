@@ -5,6 +5,7 @@ from geometry_msgs.msg import Twist
 import numpy as np
 from std_msgs.msg import Float64, Float64MultiArray, Bool, String
 from nav_msgs.msg import Odometry
+from sensor_msgs.msg import Imu
 from copy import deepcopy
 import os
 
@@ -17,10 +18,10 @@ class Shooter:
 		rospy.init_node('shooter', anonymous=True)
 		self.ammo = 12
 		self.zangle = 0
-		self.position = []
+		self.position = [0,0,0]
 		self.fired = False
 		rospy.Subscriber("odom",Odometry, self._update_position)
-		rospy.Subscriber("z_angle",Float64,self._update_angle)
+		rospy.Subscriber("z_angle",Float64,self._update_imu)
 		rospy.Subscriber("target", String, self._update_target)
 		rospy.Subscriber("imu",Imu, self._update_imu)
 
@@ -28,10 +29,7 @@ class Shooter:
 
 	def _update_position(self, response):
 		self.position = [response.pose.pose.position.x, response.pose.pose.position.y, response.pose.pose.position.z]
-		self.position_read_flag = True
-		temp_msg = Float64MultiArray()
-		temp_msg.data = self.position
-        
+
 	def _update_imu(self, response):
 		u = np.array([response.orientation.x, response.orientation.y, response.orientation.z])
 		u = u/np.linalg.norm(u)
@@ -53,7 +51,7 @@ class Shooter:
 
 	def shoot(self):
 		if self.ammo > 0:
-			position = " -x "+ str(self.position[0]) +" -y "+ str(self.position[1]) +" -z " + str(self.position[2] + 2)
+			print(self.position) ; position = " -x "+ str(self.position[0]) +" -y "+ str(self.position[1]) +" -z " + str(self.position[2] + 2)
 			projectile_path = os.getcwd() + "/maps/projectile.sdf"
 			projectile_name = "projectile"+str(11-self.ammo)
 			bashCommand = "rosrun gazebo_ros spawn_model -sdf -file " +projectile_path + " -model "+ projectile_name + position
