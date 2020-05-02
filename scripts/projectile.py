@@ -42,7 +42,7 @@ class Shooter:
 		if self.ammo > 0:
 			position = " -x "+ str(self.position[0]) +" -y "+ str(self.position[1]) +" -z " + str(self.position[2] + 2)
 			projectile_name = "projectile"+str(self.ammo)
-			bashCommand = "rosrun gazebo_ros spawn_model -sdf -file /home/henry/MechatronicsProject/projectile.sdf -model "+ projectile_name + position
+			bashCommand = "rosrun gazebo_ros spawn_model -sdf -file /home/henry/MechatronicsProject/maps/projectile.sdf -model "+ projectile_name + position
 			self.ammo=self.ammo-1
 			process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
 			output, error = process.communicate()
