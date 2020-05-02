@@ -6,6 +6,7 @@ import numpy as np
 from std_msgs.msg import Float64, Float64MultiArray, Bool, String
 from nav_msgs.msg import Odometry
 from copy import deepcopy
+import os
 
 from scipy import optimize, stats
 from sys import exit
@@ -53,8 +54,9 @@ class Shooter:
 	def shoot(self):
 		if self.ammo > 0:
 			position = " -x "+ str(self.position[0]) +" -y "+ str(self.position[1]) +" -z " + str(self.position[2] + 2)
-			projectile_name = "projectile"+str(self.ammo)
-			bashCommand = "rosrun gazebo_ros spawn_model -sdf -file /home/henry/MechatronicsProject/maps/projectile.sdf -model "+ projectile_name + position
+			projectile_path = os.getcwd() + "/maps/projectile.sdf"
+			projectile_name = "projectile"+str(11-self.ammo)
+			bashCommand = "rosrun gazebo_ros spawn_model -sdf -file " +projectile_path + " -model "+ projectile_name + position
 			self.ammo=self.ammo-1
 			process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
 			output, error = process.communicate()
