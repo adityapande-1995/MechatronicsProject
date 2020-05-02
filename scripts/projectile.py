@@ -13,6 +13,7 @@ from sys import exit
 # Subscribes to /position, /z_angle, /shoot
 class Shooter:
 	def __init__(self):
+        rospy.init_node('shooter', anonymous=True)
 		self.ammo = 12
 		self.zangle = 0
 		self.position = []
