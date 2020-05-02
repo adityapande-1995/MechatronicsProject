@@ -18,15 +18,27 @@ class Shooter:
 		self.zangle = 0
 		self.position = []
 		self.fired = False
-		rospy.Subscriber("position",Float64MultiArray,self._update_position)
+		rospy.Subscriber("odom",Odometry, self._update_position)
 		rospy.Subscriber("z_angle",Float64,self._update_angle)
 		rospy.Subscriber("target", String, self._update_target)
+		rospy.Subscriber("imu",Imu, self._update_imu)
 
-	def _update_angle(self, ang):
-		self.zangle = ang.data
 
-	def _update_position(self, pos):
-		self.position = pos.data
+
+	def _update_position(self, response):
+		self.position = [response.pose.pose.position.x, response.pose.pose.position.y, response.pose.pose.position.z]
+		self.position_read_flag = True
+		temp_msg = Float64MultiArray()
+		temp_msg.data = self.position
+        
+	def _update_imu(self, response):
+		u = np.array([response.orientation.x, response.orientation.y, response.orientation.z])
+		u = u/np.linalg.norm(u)
+		theta = 2*np.arccos(response.orientation.w)*180/np.pi
+		if u[2] > 0 : self.zangle = theta
+		else : self.zangle = -theta
+		if self.zangle > 360 : self.zangle -= 360
+		if self.zangle < 0 : self.zangle += 360
 
 	def _update_target(self,targetdata):
 		target_string = targetdata.data
