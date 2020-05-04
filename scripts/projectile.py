@@ -5,9 +5,10 @@ from geometry_msgs.msg import Twist
 import numpy as np
 from std_msgs.msg import Float64, Float64MultiArray, Bool, String
 from nav_msgs.msg import Odometry
-from gazebo_msgs.srv import DeleteModel, SpawnModel, ApplyBodyWrench
+from gazebo_msgs.srv import DeleteModel, SpawnModel, ApplyBodyWrench, SetLinkState
+from gazebo_msgs.msg import LinkState
 from sensor_msgs.msg import Imu
-from geometry_msgs.msg import Pose, Point, Quaternion, Wrench, Vector3
+from geometry_msgs.msg import Pose, Point, Quaternion, Wrench, Vector3, Twist
 from copy import deepcopy
 import os
 
@@ -18,14 +19,15 @@ from sys import exit
 class Shooter:
 	def __init__(self):
 		rospy.init_node('shooter', anonymous=True)
+		self.has_fired = False
 		self.time_last_shot = rospy.get_time()
 		self.ammo = 12
 		self.zangle = 0
 		self.position = [0,0,0]
 		self.last_projectile_deleted = True
 		rospy.Subscriber("odom",Odometry, self._update_position)
-		rospy.Subscriber("target", String, self._update_target)
 		rospy.Subscriber("imu",Imu, self._update_imu)
+		rospy.Subscriber("target", String, self._update_target)
 
 
 
@@ -49,13 +51,15 @@ class Shooter:
 		yPos = float(target_info[2])
 		
 		if abs(xPos-0.5)<0.25 and abs(yPos-0.5)<0.25:
-			if rospy.get_time()-self.time_last_shot>20:
+			if rospy.get_time()-self.time_last_shot>15 and self.has_fired:
 				self.time_last_shot = rospy.get_time()
 				self.shoot()
 				self.last_projectile_deleted = False
-			elif rospy.get_time()-self.time_last_shot>5 and self.last_projectile_deleted == False:
+			elif rospy.get_time()-self.time_last_shot>10 and self.last_projectile_deleted == False and self.has_fired:
 				self.delete_shot()
 				self.last_projectile_deleted = True
+			elif rospy.get_time()-self.time_last_shot>15 and self.has_fired == False:
+				self.has_fired = True
 
 
 	def shoot(self):
@@ -81,14 +85,26 @@ class Shooter:
 			sdf = f.read()
 			
 			spawn(projectile_name, sdf, "", pose,"")
-			rospy.wait_for_service("gazebo/apply_body_wrench")
-			force = rospy.ServiceProxy("gazebo/apply_body_wrench",ApplyBodyWrench)			
-			wrench = Wrench()
-			force = 1.0
-			wrench.force.x = force*np.cos(self.zangle*np.pi/180)
-			wrench.force.y = force*np.sin(self.zangle*np.pi/180)
+			link_name = projectile_name+"::projectile_link"
+			twist = Twist()
+			velocity = 3.0
+			twist.linear.x = velocity*np.cos(self.zangle*np.pi/180)
+			twist.linear.y = velocity*np.sin(self.zangle*np.pi/180)
+			ls = LinkState()
+			ls.link_name = link_name; ls.pose = pose; ls.twist = twist
+			rospy.wait_for_service("gazebo/set_link_state")
+			set_state = rospy.ServiceProxy("gazebo/set_link_state",SetLinkState)
+			set_state(ls)
 			self.ammo=self.ammo-1
-			force(projectile_name,"", None, wrench,rospy.get_rostime(),rospy.Duration(0.2))
+
+			
+			#rospy.wait_for_service("gazebo/apply_body_wrench")
+			#force = rospy.ServiceProxy("gazebo/apply_body_wrench",ApplyBodyWrench)			
+			#wrench = Wrench()
+			#force = 1.0
+			#wrench.force.x = force*np.cos(self.zangle*np.pi/180)
+			#wrench.force.y = force*np.sin(self.zangle*np.pi/180)
+			#force(projectile_name,"", None, wrench,rospy.get_rostime(),rospy.Duration(0.2))
 		
 	def delete_shot(self):
 		print("deleting last shot")
