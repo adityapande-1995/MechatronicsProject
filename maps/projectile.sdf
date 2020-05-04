@@ -18,7 +18,9 @@
                 </sphere>
               </geometry>
             </visual>
-          </link>
-          <gravity>0</gravity>
+            <self_collide>0</self_collide>
+            <kinematic>0</kinematic>
+            <gravity>0</gravity>
+	</link>
   </model>
 </sdf>
