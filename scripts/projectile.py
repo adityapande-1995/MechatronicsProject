@@ -5,7 +5,9 @@ from geometry_msgs.msg import Twist
 import numpy as np
 from std_msgs.msg import Float64, Float64MultiArray, Bool, String
 from nav_msgs.msg import Odometry
+from gazebo_msgs.srv import DeleteModel, SpawnModel
 from sensor_msgs.msg import Imu
+from geometry_msgs.msg import Pose, Point, Quaternion
 from copy import deepcopy
 import os
 
@@ -49,28 +51,40 @@ class Shooter:
 			self.shoot()
 
 	def shoot(self):
-		print("shooting")
 		if self.ammo > 0:
-			position = " -x "+ str(self.position[0]) +" -y "+ str(self.position[1]) +" -z " + str(self.position[2] + 0.5)
+			if self.ammo<12:
+				#delete previous projectile
+				rospy.wait_for_service("gazebo/delete_model")
+				delete = rospy.ServiceProxy("gazebo/delete_model",DeleteModel)
+				delete("projectile"+str(13-(self.ammo+1)))
+
+			#spawn projectile
+			rospy.wait_for_service("gazebo/spawn_sdf_model")
+			spawn = rospy.ServiceProxy("gazebo/spawn_sdf_model",SpawnModel)
 			projectile_path = os.getcwd() + "/maps/projectile.sdf"
 			projectile_name = "projectile"+str(13-self.ammo)
-			bashCommand = "rosrun gazebo_ros spawn_model -sdf -file " +projectile_path + " -model "+ projectile_name + position
-			self.runBash(bashCommand)
+			pose = Pose()
+			posePos = Point()
+			posePos.x = self.position[0]
+			posePos.y = self.position[1]
+			posePos.z = self.position[2]
+			poseAng = Quaternion()
+			poseAng.x = 0; poseAng.y = 0; poseAng.z = 0; poseAng.w = 1
+			pose.position = posePos
+			pose.orientation = poseAng
+			pose.position.z += 0.25
+
+			f = open(projectile_path)
+			sdf = f.read()
+			
+			spawn(projectile_name, sdf, "", pose,"")
 			self.ammo=self.ammo-1
-			if self.ammo<11:
-				#delete previous projectile
-				bashCommand = "rosservice call gazebo/delete_model '{model_name: projectile"+str(13-self.ammo+2)+"}'"
-				self.runBash(bashCommand)
 				
 			
 		
 	def go(self):
 		while True:
 			continue
-
-	def runBash(self,bashCommand):
-		process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
-		output, error = process.communicate()
 	
 		
 
