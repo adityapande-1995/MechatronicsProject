@@ -30,3 +30,7 @@ python scripts/robot2.py
 ```bash
 python scripts/cam.py
 ```
+### Projectile firing
+```bash
+python scripts/projectile.py
+```
