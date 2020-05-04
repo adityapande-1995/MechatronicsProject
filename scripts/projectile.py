@@ -18,10 +18,11 @@ from sys import exit
 class Shooter:
 	def __init__(self):
 		rospy.init_node('shooter', anonymous=True)
+		self.time_last_shot = rospy.get_time()
 		self.ammo = 12
 		self.zangle = 0
 		self.position = [0,0,0]
-		self.fired = False
+		self.last_projectile_deleted = True
 		rospy.Subscriber("odom",Odometry, self._update_position)
 		rospy.Subscriber("target", String, self._update_target)
 		rospy.Subscriber("imu",Imu, self._update_imu)
@@ -48,16 +49,18 @@ class Shooter:
 		yPos = float(target_info[2])
 		
 		if abs(xPos-0.5)<0.25 and abs(yPos-0.5)<0.25:
-			self.shoot()
+			if rospy.get_time()-self.time_last_shot>20:
+				self.time_last_shot = rospy.get_time()
+				self.shoot()
+				self.last_projectile_deleted = False
+			elif rospy.get_time()-self.time_last_shot>5 and self.last_projectile_deleted == False:
+				self.delete_shot()
+				self.last_projectile_deleted = True
+
 
 	def shoot(self):
+		print("shooting")
 		if self.ammo > 0:
-			if self.ammo<12:
-				#delete previous projectile
-				rospy.wait_for_service("gazebo/delete_model")
-				delete = rospy.ServiceProxy("gazebo/delete_model",DeleteModel)
-				delete("projectile"+str(13-(self.ammo+1)))
-
 			#spawn projectile
 			rospy.wait_for_service("gazebo/spawn_sdf_model")
 			spawn = rospy.ServiceProxy("gazebo/spawn_sdf_model",SpawnModel)
@@ -79,7 +82,13 @@ class Shooter:
 			
 			spawn(projectile_name, sdf, "", pose,"")
 			self.ammo=self.ammo-1
-				
+		
+	def delete_shot(self):
+		print("deleting last shot")
+		#delete previous projectile
+		rospy.wait_for_service("gazebo/delete_model")
+		delete = rospy.ServiceProxy("gazebo/delete_model",DeleteModel)
+		delete("projectile"+str(13-(self.ammo+1)))		
 			
 		
 	def go(self):
