@@ -5,9 +5,9 @@ from geometry_msgs.msg import Twist
 import numpy as np
 from std_msgs.msg import Float64, Float64MultiArray, Bool, String
 from nav_msgs.msg import Odometry
-from gazebo_msgs.srv import DeleteModel, SpawnModel
+from gazebo_msgs.srv import DeleteModel, SpawnModel, ApplyBodyWrench
 from sensor_msgs.msg import Imu
-from geometry_msgs.msg import Pose, Point, Quaternion
+from geometry_msgs.msg import Pose, Point, Quaternion, Wrench, Vector3
 from copy import deepcopy
 import os
 
@@ -81,7 +81,14 @@ class Shooter:
 			sdf = f.read()
 			
 			spawn(projectile_name, sdf, "", pose,"")
+			rospy.wait_for_service("gazebo/apply_body_wrench")
+			force = rospy.ServiceProxy("gazebo/apply_body_wrench",ApplyBodyWrench)			
+			wrench = Wrench()
+			force = 1.0
+			wrench.force.x = force*np.cos(self.zangle*np.pi/180)
+			wrench.force.y = force*np.sin(self.zangle*np.pi/180)
 			self.ammo=self.ammo-1
+			force(projectile_name,"", None, wrench,rospy.get_rostime(),rospy.Duration(0.2))
 		
 	def delete_shot(self):
 		print("deleting last shot")
