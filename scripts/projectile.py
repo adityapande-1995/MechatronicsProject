@@ -49,7 +49,9 @@ class Shooter:
 		color = target_info[0]
 		xPos = float(target_info[1])
 		yPos = float(target_info[2])
-		
+		if color.lower() != "red":
+			#we only want to shoot red
+			return
 		if abs(xPos-0.5)<0.25 and abs(yPos-0.5)<0.25:
 			if rospy.get_time()-self.time_last_shot>15 and self.has_fired:
 				self.time_last_shot = rospy.get_time()
@@ -63,7 +65,7 @@ class Shooter:
 
 
 	def shoot(self):
-		print("shooting")
+		print("Shooting")
 		if self.ammo > 0:
 			#spawn projectile
 			rospy.wait_for_service("gazebo/spawn_sdf_model")
@@ -96,19 +98,10 @@ class Shooter:
 			set_state = rospy.ServiceProxy("gazebo/set_link_state",SetLinkState)
 			set_state(ls)
 			self.ammo=self.ammo-1
-
-			
-			#rospy.wait_for_service("gazebo/apply_body_wrench")
-			#force = rospy.ServiceProxy("gazebo/apply_body_wrench",ApplyBodyWrench)			
-			#wrench = Wrench()
-			#force = 1.0
-			#wrench.force.x = force*np.cos(self.zangle*np.pi/180)
-			#wrench.force.y = force*np.sin(self.zangle*np.pi/180)
-			#force(projectile_name,"", None, wrench,rospy.get_rostime(),rospy.Duration(0.2))
 		
 	def delete_shot(self):
-		print("deleting last shot")
 		#delete previous projectile
+		print("Deleting last shot")
 		rospy.wait_for_service("gazebo/delete_model")
 		delete = rospy.ServiceProxy("gazebo/delete_model",DeleteModel)
 		delete("projectile"+str(13-(self.ammo+1)))		
