@@ -19,6 +19,6 @@
               </geometry>
             </visual>
           </link>
-
+          <gravity>0</gravity>
   </model>
 </sdf>
