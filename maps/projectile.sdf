@@ -3,6 +3,17 @@
   <model name="projectile">
 	<static>0</static>
 	<link name='projectile_link'>
+          <inertial>
+            <mass>0.25</mass>
+            <inertia>
+              <ixx>9e-05</ixx>
+              <ixy>0.000000</ixy>
+              <ixz>0.000000</ixz>
+              <iyy>9e-05</iyy>
+              <iyz>0.000000</iyz>
+              <izz>9e-05</izz>
+            </inertia>
+          </inertial>
             <collision name='collision'>
               <geometry>
                 <sphere>
