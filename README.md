@@ -1,6 +1,6 @@
 # Mechatronics Project
 
-This is to simulate a Turtlebot Waffle solving a maze and shooting coloured targets, made as a part of the course Mechatronics and Robotics at CU Boulder.
+This is to simulate a Turtlebot Waffle autonomously solving a maze and shooting coloured targets, made as a part of the course Mechatronics and Robotics at CU Boulder.
 
 ![Maze solving and mapping](https://github.com/adityapande-1995/MechatronicsProject/blob/master/resources/screenshot.png "Maze solving and mapping in action")
 
