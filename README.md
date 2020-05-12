@@ -1,5 +1,9 @@
 # Mechatronics Project
 
+This is to simulate a turtlebot solving a maze and finding coloured targets, made as a part of the course Mechatronics and Robotics at CU Boulder.
+
+![Maze solving and mapping](https://github.com/adityapande-1995/MechatronicsProject/blob/master/resources/screenshot.png "Maze solving and mapping in action")
+
 ## Launching the simulation
 The ```TURTLEBOT3_MODEL``` environment variable needs to be exported globally :
 ```bash
